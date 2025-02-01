@@ -1,18 +1,20 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Management;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Win32.TaskScheduler;
 
 namespace Persistence_Defender
 {
-    internal class SchTasksDefender
+    internal class SchTasksDefender : IPersistenceDefender
     {
         private static ManagementEventWatcher watcher;
 
-        public static void StartDefender()
+        public void StartDefender()
         {
             try
             {
@@ -20,8 +22,12 @@ namespace Persistence_Defender
                 watcher = new ManagementEventWatcher(new ManagementScope(@"\\.\root\Microsoft\Windows\TaskScheduler"), new EventQuery(query));
                 watcher.EventArrived += OnScheduledTaskCreated;
                 watcher.Start();
+                EventLogger.WriteInfo("Started scheduled tasks persistence defender.");
             }
-            catch (Exception e) { /* TODO: Add logs for exceptions */ }
+            catch (Exception ex)
+            {
+                EventLogger.WriteError(ex.Message);
+            }
         }
 
         private static void OnScheduledTaskCreated(object sender, EventArrivedEventArgs e)
@@ -31,34 +37,41 @@ namespace Persistence_Defender
                 // Extract task name
                 var scheduledTask = e.NewEvent["TargetInstance"] as ManagementBaseObject;
                 string taskName = scheduledTask?["Name"]?.ToString() ?? "Unknown";
+                EventLogger.WriteWarning($"New scheduled task created: {taskName}");
 
-                Console.WriteLine($"[ALERT] New Scheduled Task Created: {taskName}");
-
-                // TODO: Write to Windows Event Log
-                // WriteToEventLog($"New scheduled task created: {taskName}");
+                // Undo the change
+                RemoveScheduledTask(taskName);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error processing event: {ex.Message}");
+                EventLogger.WriteError(ex.Message);
             }
         }
-
-        /*
-        private static void WriteToEventLog(string message)
+        private static void RemoveScheduledTask(string taskName)
         {
-            string source = "ScheduledTaskMonitor";
-            string log = "Application";
-
-            if (!EventLog.SourceExists(source))
+            try
             {
-                EventLog.CreateEventSource(source, log);
+                using (TaskService ts = new TaskService())
+                {
+                    Microsoft.Win32.TaskScheduler.Task task = ts.GetTask(taskName);
+                    if (task != null)
+                    {
+                        ts.RootFolder.DeleteTask(taskName, false);
+                        EventLogger.WriteInfo($"Scheduled task '{taskName}' deleted successfully.");
+                    }
+                    else
+                    {
+                        EventLogger.WriteError($"Scheduled task '{taskName}' not found.");
+                    }
+                }
             }
-
-            EventLog.WriteEntry(source, message, EventLogEntryType.Warning);
+            catch (Exception ex)
+            {
+                EventLogger.WriteError($"Error removing scheduled task '{taskName}': {ex.Message}");
+            }
         }
-         */
 
-        public static void StopDefender()
+        public void StopDefender()
         {
             try
             {
@@ -67,12 +80,12 @@ namespace Persistence_Defender
                     watcher.Stop();
                     watcher.Dispose();
                     watcher = null;
-                    Console.WriteLine("WMI subscription removed successfully.");
+                    EventLogger.WriteInfo("Stopped scheduled tasks persistence defender.");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error removing WMI subscription: {ex.Message}");
+                EventLogger.WriteError(ex.Message);
             }
         }
     }

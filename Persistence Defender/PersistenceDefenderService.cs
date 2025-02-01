@@ -12,6 +12,8 @@ namespace Persistence_Defender
 {
     public partial class PersistenceDefenderService : ServiceBase
     {
+        private List<IPersistenceDefender> defenders;
+
         public PersistenceDefenderService()
         {
             InitializeComponent();
@@ -21,11 +23,27 @@ namespace Persistence_Defender
         {
             // TODO: Load kernel driver
 
+            // Define all persistence defenders that will be loaded
+            defenders = new List<IPersistenceDefender>
+            {
+                new SchTasksDefender()
+            };
 
+            // TODO: Check user configuration before simply loading everything
+
+            // Load all persistence defenders
+            foreach (var defender in defenders)
+            {
+                defender.StartDefender();
+            }
         }
 
         protected override void OnStop()
         {
+            foreach(var defender in defenders)
+            {
+                defender.StopDefender();
+            }
         }
     }
 }
