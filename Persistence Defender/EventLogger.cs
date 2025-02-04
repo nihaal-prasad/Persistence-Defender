@@ -9,10 +9,11 @@ namespace Persistence_Defender
 {
     internal class EventLogger
     {
+        private static string source = "Persistence Defender Service";
+        private static string log = "Application";
+
         public static void WriteWarning(string message)
         {
-            string source = "PersistenceDefender";
-            string log = "Application";
 
             if (!EventLog.SourceExists(source))
             {
@@ -24,9 +25,6 @@ namespace Persistence_Defender
 
         public static void WriteError(string message)
         {
-            string source = "PersistenceDefender";
-            string log = "Application";
-
             if (!EventLog.SourceExists(source))
             {
                 EventLog.CreateEventSource(source, log);
@@ -37,9 +35,6 @@ namespace Persistence_Defender
 
         public static void WriteInfo(string message)
         {
-            string source = "PersistenceDefender";
-            string log = "Application";
-
             if (!EventLog.SourceExists(source))
             {
                 EventLog.CreateEventSource(source, log);

@@ -7,6 +7,7 @@ using System.Management;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Win32.TaskScheduler;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Persistence_Defender
 {
@@ -22,11 +23,11 @@ namespace Persistence_Defender
                 watcher = new ManagementEventWatcher(new ManagementScope(@"\\.\root\Microsoft\Windows\TaskScheduler"), new EventQuery(query));
                 watcher.EventArrived += OnScheduledTaskCreated;
                 watcher.Start();
-                EventLogger.WriteInfo("Started scheduled tasks persistence defender.");
+                EventLogger.WriteInfo("Started scheduled tasks defender.");
             }
             catch (Exception ex)
             {
-                EventLogger.WriteError(ex.Message);
+                EventLogger.WriteError($"Error starting scheduled tasks defender: {ex.Message}");
             }
         }
 
@@ -36,7 +37,11 @@ namespace Persistence_Defender
             {
                 // Extract task name
                 var scheduledTask = e.NewEvent["TargetInstance"] as ManagementBaseObject;
-                string taskName = scheduledTask?["Name"]?.ToString() ?? "Unknown";
+                foreach (var prop in scheduledTask.Properties)
+                {
+                    EventLogger.WriteWarning($"Property: {prop.Name} = {prop.Value}");
+                }
+                string taskName = scheduledTask?["URI"]?.ToString() ?? "Unknown";
                 EventLogger.WriteWarning($"New scheduled task created: {taskName}");
 
                 // Undo the change
@@ -44,7 +49,7 @@ namespace Persistence_Defender
             }
             catch (Exception ex)
             {
-                EventLogger.WriteError(ex.Message);
+                EventLogger.WriteError($"Error in scheduled tasks defender watcher: {ex.Message}");
             }
         }
         private static void RemoveScheduledTask(string taskName)
@@ -80,12 +85,12 @@ namespace Persistence_Defender
                     watcher.Stop();
                     watcher.Dispose();
                     watcher = null;
-                    EventLogger.WriteInfo("Stopped scheduled tasks persistence defender.");
+                    EventLogger.WriteInfo("Stopped scheduled tasks defender.");
                 }
             }
             catch (Exception ex)
             {
-                EventLogger.WriteError(ex.Message);
+                EventLogger.WriteError($"Error stopping scheduled tasks defender: {ex.Message}");
             }
         }
     }
