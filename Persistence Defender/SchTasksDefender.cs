@@ -37,10 +37,6 @@ namespace Persistence_Defender
             {
                 // Extract task name
                 var scheduledTask = e.NewEvent["TargetInstance"] as ManagementBaseObject;
-                foreach (var prop in scheduledTask.Properties)
-                {
-                    EventLogger.WriteWarning($"Property: {prop.Name} = {prop.Value}");
-                }
                 string taskName = scheduledTask?["URI"]?.ToString() ?? "Unknown";
                 EventLogger.WriteWarning($"New scheduled task created: {taskName}");
 
