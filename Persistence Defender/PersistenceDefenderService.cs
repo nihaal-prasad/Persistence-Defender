@@ -8,6 +8,8 @@ using System.ServiceProcess;
 using System.Text;
 using System.Threading.Tasks;
 
+// Command for installing: sc create "Persistence Defender Service" binPath="C:\Users\Administrator\Desktop\Debug\Persistence Defender.exe"
+
 namespace Persistence_Defender
 {
     public partial class PersistenceDefenderService : ServiceBase
@@ -26,7 +28,8 @@ namespace Persistence_Defender
             // Define all persistence defenders that will be loaded
             defenders = new List<IPersistenceDefender>
             {
-                new SchTasksDefender()
+                new SchTasksDefender(),
+                new StartupFoldersDefender()
             };
 
             // TODO: Check user configuration before simply loading everything

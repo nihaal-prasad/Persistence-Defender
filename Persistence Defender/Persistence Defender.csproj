@@ -71,6 +71,7 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SchTasksDefender.cs" />
+    <Compile Include="StartupFoldersDefender.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
