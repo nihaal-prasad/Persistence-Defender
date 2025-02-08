@@ -29,7 +29,8 @@ namespace Persistence_Defender
             defenders = new List<IPersistenceDefender>
             {
                 new SchTasksDefender(),
-                new StartupFoldersDefender()
+                new StartupFoldersDefender(),
+                new AppShimsDefender()
             };
 
             // TODO: Check user configuration before simply loading everything

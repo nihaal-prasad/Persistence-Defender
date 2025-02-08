@@ -54,6 +54,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AppShimsDefender.cs" />
     <Compile Include="EventLogger.cs" />
     <Compile Include="IPersistenceDefender.cs" />
     <Compile Include="PersistenceDefenderService.cs">
