@@ -59,7 +59,7 @@ namespace Persistence_Defender
                 };
 
                 watcher.Created += OnAppShimCreated;
-                watcher.Renamed += OnAppShimCreated;
+                watcher.Renamed += OnAppShimCreated; // All monitor renamed files
                 watcher.EnableRaisingEvents = true;
                 return watcher;
             }

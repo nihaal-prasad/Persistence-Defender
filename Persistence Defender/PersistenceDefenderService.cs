@@ -30,7 +30,8 @@ namespace Persistence_Defender
             {
                 new SchTasksDefender(),
                 new StartupFoldersDefender(),
-                new AppShimsDefender()
+                new AppShimsDefender(),
+                new ServicesDefender()
             };
 
             // TODO: Check user configuration before simply loading everything
