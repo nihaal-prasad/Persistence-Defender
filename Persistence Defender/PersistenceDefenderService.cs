@@ -32,7 +32,8 @@ namespace Persistence_Defender
                 new StartupFoldersDefender(),
                 new AppShimsDefender(),
                 new ServicesDefender(),
-                new PSProfilesDefender()
+                new PSProfilesDefender(),
+                new BITSJobsDefender()
             };
 
             // TODO: Check user configuration before simply loading everything
