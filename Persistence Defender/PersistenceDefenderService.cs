@@ -31,7 +31,8 @@ namespace Persistence_Defender
                 new SchTasksDefender(),
                 new StartupFoldersDefender(),
                 new AppShimsDefender(),
-                new ServicesDefender()
+                new ServicesDefender(),
+                new PSProfilesDefender()
             };
 
             // TODO: Check user configuration before simply loading everything
