@@ -18,26 +18,37 @@ namespace Persistence_Defender
         {
             try
             {
-                string userProfilePath = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+                string usersDirectory = "C:\\Users";
+                string[] userProfiles = Directory.GetDirectories(usersDirectory);
+
                 string systemProfilePath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
 
-                string[] psProfilePaths =
+                string[] psProfilePaths = userProfiles.SelectMany(userDir => new[]
                 {
-                    Path.Combine(userProfilePath, "WindowsPowerShell", "Profile.ps1"),
-                    Path.Combine(userProfilePath, "PowerShell", "Profile.ps1"),
+                    Path.Combine(userDir, "Documents", "WindowsPowerShell", "Profile.ps1"),
+                    Path.Combine(userDir, "Documents", "PowerShell", "Profile.ps1"),
+                    Path.Combine(userDir, "Documents", "WindowsPowerShell", "Microsoft.PowerShell_profile.ps1"),
+                    Path.Combine(userDir, "Documents", "PowerShell", "Microsoft.PowerShell_profile.ps1")
+                }).ToArray();
+
+                string[] allProfilePaths = psProfilePaths.Concat(new[]
+                {
                     Path.Combine(systemProfilePath, "Microsoft", "WindowsPowerShell", "Profile.ps1"),
-                    Path.Combine(systemProfilePath, "Microsoft", "PowerShell", "Profile.ps1")
-                };
+                    Path.Combine(systemProfilePath, "Microsoft", "PowerShell", "Profile.ps1"),
+                    Path.Combine(systemProfilePath, "Microsoft", "WindowsPowerShell", "Microsoft.PowerShell_profile.ps1"),
+                    Path.Combine(systemProfilePath, "Microsoft", "PowerShell", "Microsoft.PowerShell_profile.ps1")
+                }).ToArray();
 
                 foreach (string path in psProfilePaths)
                 {
+                    EventLogger.WriteInfo($"{path}");
                     if (File.Exists(path))
                     {
                         SetFileAttributes(path, FILE_ATTRIBUTE_READONLY);
                     }
                 }
 
-                watchers = psProfilePaths.Select(CreateWatcher).Where(w => w != null).ToArray();
+                watchers = allProfilePaths.Select(CreateWatcher).Where(w => w != null).ToArray();
 
                 EventLogger.WriteInfo("Started PowerShell profiles defender.");
             }
@@ -51,16 +62,11 @@ namespace Persistence_Defender
         {
             try
             {
-                if (!File.Exists(path))
-                {
-                    return null;
-                }
-
                 FileSystemWatcher watcher = new FileSystemWatcher
                 {
                     Path = Path.GetDirectoryName(path),
                     Filter = Path.GetFileName(path),
-                    NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.Security
+                    NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.Security | NotifyFilters.Attributes
                 };
 
                 watcher.Changed += OnProfileAccessAttempt;

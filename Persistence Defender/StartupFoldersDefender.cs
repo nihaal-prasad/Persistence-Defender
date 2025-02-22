@@ -83,7 +83,7 @@ namespace Persistence_Defender
             }
             catch (Exception ex)
             {
-                EventLogger.WriteError($"Error stopping startup folders defender");
+                EventLogger.WriteError($"Error stopping startup folders defender: {ex.Message}");
             }
         }
     }
