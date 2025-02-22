@@ -25,6 +25,8 @@ namespace Persistence_Defender
 
             // Monitor all startup folders
             startupWatchers = allStartupPaths.Select(CreateWatcher).Where(w => w != null).ToArray();
+
+            EventLogger.WriteInfo("Started startup folders defender.");
         }
 
         private static FileSystemWatcher CreateWatcher(string path)

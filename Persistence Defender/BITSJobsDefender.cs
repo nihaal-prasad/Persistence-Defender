@@ -1,61 +1,52 @@
 ﻿using System;
+using System.Diagnostics.Eventing.Reader;
 using System.Management;
+using System.Runtime.InteropServices;
 
 namespace Persistence_Defender
 {
     public class BITSJobsDefender : IPersistenceDefender
     {
-        private ManagementEventWatcher watcher;
+        ManagementEventWatcher watcher;
 
         public void StartDefender()
         {
             try
             {
-                string query = "SELECT * FROM __InstanceCreationEvent WITHIN 2 WHERE TargetInstance ISA 'MSFT_BitsJob'";
-                watcher = new ManagementEventWatcher(new ManagementScope("\\\\.\\root\\Microsoft\\Windows\\Bits"), new EventQuery(query));
-                watcher.EventArrived += OnBITSJobCreated;
-                watcher.Start();
-                EventLogger.WriteInfo("Started BITS jobs defender.");
-            }
-            catch (Exception ex)
+                // Define an XPath query to filter for BITS job creation events.
+                // For example, suppose that BITS logs a job creation event with EventID=1 from the "BITS" provider.
+                // You may need to adjust the Provider/@Name and EventID based on your environment.
+                string queryString = "*[System/Provider[@Name='Microsoft-Windows-Bits-Client'] and System/EventID=3]";
+
+                // Specify the event log channel that contains the BITS events.
+                string logName = "Microsoft-Windows-Bits-Client/Operational";
+
+                // Create an EventLogQuery for the channel with the specified query.
+                EventLogQuery eventQuery = new EventLogQuery(logName, PathType.LogName, queryString);
+
+                // Instantiate the EventLogWatcher with the query.
+                EventLogWatcher watcher = new EventLogWatcher(eventQuery);
+
+                // Register the callback that will be triggered when a matching event is written.
+                watcher.EventRecordWritten += new EventHandler<EventRecordWrittenEventArgs>(OnEventRecordWritten);
+
+                // Enable the watcher. This starts monitoring without a manual loop.
+                watcher.Enabled = true;
+
+                EventLogger.WriteInfo("Started BITS Jobs defender.");
+            } catch (Exception ex)
             {
-                EventLogger.WriteError($"Error starting BITS jobs defender: {ex.Message}");
+                EventLogger.WriteError($"Error creating BITS Jobs Defender: {ex.Message}");
             }
         }
 
-        private static void OnBITSJobCreated(object sender, EventArrivedEventArgs e)
+        static void OnEventRecordWritten(object sender, EventRecordWrittenEventArgs e)
         {
-            try
+            if (e.EventRecord != null)
             {
-                var newBITSJob = e.NewEvent["TargetInstance"] as ManagementBaseObject;
-                string jobName = newBITSJob?["DisplayName"]?.ToString() ?? "Unknown";
-                EventLogger.WriteWarning($"New BITS job detected: {jobName}");
+                EventLogger.WriteWarning($"New BITS job detected: {e.EventRecord.RecordId}");
 
-                // Attempt to remove the BITS job
-                RemoveBITSJob(jobName);
-            }
-            catch (Exception ex)
-            {
-                EventLogger.WriteError($"Error in BITS jobs defender watcher: {ex.Message}");
-            }
-        }
-
-        private static void RemoveBITSJob(string jobName)
-        {
-            try
-            {
-                using (var searcher = new ManagementObjectSearcher("root\\Microsoft\\Windows\\Bits", "SELECT * FROM MSFT_BitsJob WHERE DisplayName='" + jobName + "'"))
-                {
-                    foreach (ManagementObject job in searcher.Get())
-                    {
-                        job.InvokeMethod("Cancel", null);
-                        EventLogger.WriteInfo($"BITS job '{jobName}' canceled successfully.");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                EventLogger.WriteError($"Error removing BITS job '{jobName}': {ex.Message}");
+                // TODO: Insert BITS job cancellation code here.
             }
         }
 
@@ -63,17 +54,10 @@ namespace Persistence_Defender
         {
             try
             {
-                if (watcher != null)
-                {
-                    watcher.Stop();
-                    watcher.Dispose();
-                    watcher = null;
-                    EventLogger.WriteInfo("Stopped BITS jobs defender.");
-                }
-            }
-            catch (Exception ex)
+                watcher.Dispose();
+            } catch (Exception ex)
             {
-                EventLogger.WriteError($"Error stopping BITS jobs defender: {ex.Message}");
+                EventLogger.WriteError($"Error stopping BITS Jobs Defender: {ex.Message}");
             }
         }
     }

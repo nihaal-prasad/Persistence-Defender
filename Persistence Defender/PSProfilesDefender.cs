@@ -41,7 +41,6 @@ namespace Persistence_Defender
 
                 foreach (string path in psProfilePaths)
                 {
-                    EventLogger.WriteInfo($"{path}");
                     if (File.Exists(path))
                     {
                         SetFileAttributes(path, FILE_ATTRIBUTE_READONLY);
@@ -62,6 +61,12 @@ namespace Persistence_Defender
         {
             try
             {
+
+                if (!Directory.Exists(path))
+                {
+                    return null;
+                }
+
                 FileSystemWatcher watcher = new FileSystemWatcher
                 {
                     Path = Path.GetDirectoryName(path),
