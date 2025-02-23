@@ -78,7 +78,7 @@ namespace Persistence_Defender
         {
             try
             {
-                watcher.Dispose();
+                watcher?.Dispose();
             }
             catch (Exception ex)
             {

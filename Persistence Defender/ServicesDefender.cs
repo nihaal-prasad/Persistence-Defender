@@ -12,7 +12,7 @@ namespace Persistence_Defender
         {
             try
             {
-                string query = "SELECT * FROM __InstanceCreationEvent WITHIN 2 WHERE TargetInstance ISA 'Win32_Service'";
+                string query = "SELECT * FROM __InstanceCreationEvent WITHIN 10 WHERE TargetInstance ISA 'Win32_Service'";
                 watcher = new ManagementEventWatcher(new ManagementScope("\\\\.\\root\\cimv2"), new EventQuery(query));
                 watcher.EventArrived += OnServiceCreated;
                 watcher.Start();

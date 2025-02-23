@@ -19,7 +19,7 @@ namespace Persistence_Defender
         {
             try
             {
-                string query = "SELECT * FROM __InstanceCreationEvent WITHIN 2 WHERE TargetInstance ISA 'MSFT_ScheduledTask'";
+                string query = "SELECT * FROM __InstanceCreationEvent WITHIN 10 WHERE TargetInstance ISA 'MSFT_ScheduledTask'";
                 watcher = new ManagementEventWatcher(new ManagementScope(@"\\.\root\Microsoft\Windows\TaskScheduler"), new EventQuery(query));
                 watcher.EventArrived += OnScheduledTaskCreated;
                 watcher.Start();

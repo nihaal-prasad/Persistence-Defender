@@ -33,7 +33,8 @@ namespace Persistence_Defender
                 new AppShimsDefender(),
                 new ServicesDefender(),
                 new PSProfilesDefender(),
-                new BITSJobsDefender()
+                new BITSJobsDefender(),
+                new RegKeysDefender()
             };
 
             // TODO: Check user configuration before simply loading everything
