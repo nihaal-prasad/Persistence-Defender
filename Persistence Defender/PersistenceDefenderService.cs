@@ -24,6 +24,8 @@ namespace Persistence_Defender
         protected override void OnStart(string[] args)
         {
             // TODO: Load kernel driver
+            // TODO: Add settings file
+            // TODO: Enable/disable alerts/warnings/etc from certain locations
 
             // Define all persistence defenders that will be loaded
             defenders = new List<IPersistenceDefender>

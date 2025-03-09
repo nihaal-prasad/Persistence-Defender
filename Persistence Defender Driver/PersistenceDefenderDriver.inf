@@ -1,0 +1,62 @@
+;
+; PersistenceDefenderDriver.inf
+;
+
+[Version]
+Signature   = "$WINDOWS NT$"
+Class       = System ; TODO: specify appropriate Class
+ClassGuid   = {4d36e97d-e325-11ce-bfc1-08002be10318} ; TODO: specify appropriate ClassGuid
+Provider    = %ManufacturerName%
+CatalogFile = PersistenceDefenderDriver.cat
+DriverVer   = ; TODO: set DriverVer in stampinf property pages
+PnpLockdown = 1
+
+[DestinationDirs]
+DefaultDestDir = 13
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+PersistenceDefenderDriver.sys  = 1,,
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName% = Standard,NT$ARCH$.10.0...16299 ; %13% support introduced in build 16299
+
+[Standard.NT$ARCH$.10.0...16299]
+%PersistenceDefenderDriver.DeviceDesc% = PersistenceDefenderDriver_Device, Root\PersistenceDefenderDriver ; TODO: edit hw-id
+
+[PersistenceDefenderDriver_Device.NT]
+CopyFiles = File_Copy
+
+[File_Copy]
+PersistenceDefenderDriver.sys
+
+;-------------- Service installation
+[PersistenceDefenderDriver_Device.NT.Services]
+AddService = PersistenceDefenderDriver,%SPSVCINST_ASSOCSERVICE%, PersistenceDefenderDriver_Service_Inst
+
+; -------------- PersistenceDefenderDriver driver install sections
+[PersistenceDefenderDriver_Service_Inst]
+DisplayName    = %PersistenceDefenderDriver.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %13%\PersistenceDefenderDriver.sys
+
+[PersistenceDefenderDriver_Device.NT.Wdf]
+KmdfService = PersistenceDefenderDriver, PersistenceDefenderDriver_wdfsect
+
+[PersistenceDefenderDriver_wdfsect]
+KmdfLibraryVersion = $KMDFVERSION$
+
+[Strings]
+SPSVCINST_ASSOCSERVICE = 0x00000002
+ManufacturerName = "<Your manufacturer name>" ;TODO: Replace with your manufacturer name
+DiskName = "PersistenceDefenderDriver Installation Disk"
+PersistenceDefenderDriver.DeviceDesc = "PersistenceDefenderDriver Device"
+PersistenceDefenderDriver.SVCDESC = "PersistenceDefenderDriver Service"
