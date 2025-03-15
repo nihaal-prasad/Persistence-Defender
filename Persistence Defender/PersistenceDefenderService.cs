@@ -8,7 +8,7 @@ using System.ServiceProcess;
 using System.Text;
 using System.Threading.Tasks;
 
-// Command for installing: sc create "Persistence Defender Service" binPath="C:\Users\Administrator\Desktop\Debug\Persistence Defender.exe"
+// Command for installing: sc create "Persistence Defender Service" binPath="C:\Users\Administrator\Desktop\Debug\Persistence Defender.exe" start= auto
 
 namespace Persistence_Defender
 {
@@ -23,8 +23,10 @@ namespace Persistence_Defender
 
         protected override void OnStart(string[] args)
         {
-            // TODO: Load kernel driver
-            // TODO: Add settings file
+            // Check service settings in registry
+            SettingsReader settingsReader = new SettingsReader();
+            settingsReader.LoadRegistryValues();
+
             // TODO: Enable/disable alerts/warnings/etc from certain locations
 
             // Define all persistence defenders that will be loaded
