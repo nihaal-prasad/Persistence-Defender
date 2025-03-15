@@ -5,25 +5,30 @@ using System.Management;
 
 namespace Persistence_Defender
 {
-    public class BITSJobsDefender : IPersistenceDefender
+    public class BITSJobsDefender : BasePersistenceDefender
     {
         ManagementEventWatcher watcher;
 
-        public void StartDefender()
+        public BITSJobsDefender(int mode) : base(mode) { }
+
+        public override void StartDefender()
         {
-            try
+            if (Mode != 0)
             {
-                string queryString = "*[System/Provider[@Name='Microsoft-Windows-Bits-Client'] and System/EventID=3]";
-                string logName = "Microsoft-Windows-Bits-Client/Operational";
-                EventLogQuery eventQuery = new EventLogQuery(logName, PathType.LogName, queryString);
-                EventLogWatcher watcher = new EventLogWatcher(eventQuery);
-                watcher.EventRecordWritten += new EventHandler<EventRecordWrittenEventArgs>(OnEventRecordWritten);
-                watcher.Enabled = true;
-                EventLogger.WriteInfo("Started BITS Jobs defender.");
-            }
-            catch (Exception ex)
-            {
-                EventLogger.WriteError($"Error creating BITS Jobs Defender: {ex.Message}");
+                try
+                {
+                    string queryString = "*[System/Provider[@Name='Microsoft-Windows-Bits-Client'] and System/EventID=3]";
+                    string logName = "Microsoft-Windows-Bits-Client/Operational";
+                    EventLogQuery eventQuery = new EventLogQuery(logName, PathType.LogName, queryString);
+                    EventLogWatcher watcher = new EventLogWatcher(eventQuery);
+                    watcher.EventRecordWritten += new EventHandler<EventRecordWrittenEventArgs>(OnEventRecordWritten);
+                    watcher.Enabled = true;
+                    EventLogger.WriteInfo("Started BITS Jobs defender.");
+                }
+                catch (Exception ex)
+                {
+                    EventLogger.WriteError($"Error creating BITS Jobs Defender: {ex.Message}");
+                }
             }
         }
 
@@ -74,7 +79,7 @@ namespace Persistence_Defender
             }
         }
 
-        public void StopDefender()
+        public override void StopDefender()
         {
             try
             {

@@ -4,29 +4,34 @@ using System.Linq;
 
 namespace Persistence_Defender
 {
-    internal class StartupFoldersDefender : IPersistenceDefender
+    internal class StartupFoldersDefender : BasePersistenceDefender
     {
         private static FileSystemWatcher[] startupWatchers;
 
-        public void StartDefender()
+        public StartupFoldersDefender(int mode) : base(mode) { }
+
+        public override void StartDefender()
         {
-            // Get all user-specific startup folders
-            string usersDirectory = "C:\\Users";
-            string[] userStartupPaths = Directory.GetDirectories(usersDirectory)
-                .Select(userDir => Path.Combine(userDir, "AppData", "Roaming", "Microsoft", "Windows", "Start Menu", "Programs", "Startup"))
-                .Where(Directory.Exists)
-                .ToArray();
+            if (Mode != 0)
+            {
+                // Get all user-specific startup folders
+                string usersDirectory = "C:\\Users";
+                string[] userStartupPaths = Directory.GetDirectories(usersDirectory)
+                    .Select(userDir => Path.Combine(userDir, "AppData", "Roaming", "Microsoft", "Windows", "Start Menu", "Programs", "Startup"))
+                    .Where(Directory.Exists)
+                    .ToArray();
 
-            // System-wide startup folders
-            string commonStartupPath = "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\Startup";
+                // System-wide startup folders
+                string commonStartupPath = "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\Startup";
 
-            // Combine all startup folders (user-specific + system-wide)
-            string[] allStartupPaths = userStartupPaths.Append(commonStartupPath).ToArray();
+                // Combine all startup folders (user-specific + system-wide)
+                string[] allStartupPaths = userStartupPaths.Append(commonStartupPath).ToArray();
 
-            // Monitor all startup folders
-            startupWatchers = allStartupPaths.Select(CreateWatcher).Where(w => w != null).ToArray();
+                // Monitor all startup folders
+                startupWatchers = allStartupPaths.Select(CreateWatcher).Where(w => w != null).ToArray();
 
-            EventLogger.WriteInfo("Started startup folders defender.");
+                EventLogger.WriteInfo("Started startup folders defender.");
+            }
         }
 
         private static FileSystemWatcher CreateWatcher(string path)
@@ -74,7 +79,7 @@ namespace Persistence_Defender
             }
         }
 
-        public void StopDefender()
+        public override void StopDefender()
         {
             try
             {

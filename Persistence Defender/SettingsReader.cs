@@ -55,6 +55,7 @@ namespace Persistence_Defender
                             if(value == null)
                             {
                                 key.SetValue(valueName, 1);
+                                startupSettings[valueName] = 1;
                             }
                             else if (value is int intValue)
                             {
@@ -93,7 +94,7 @@ namespace Persistence_Defender
             }
         }
 
-        public int? GetRegistryValue(string key)
+        public int GetRegistryValue(string key)
         {
             if (startupSettings.ContainsKey(key))
             {
@@ -102,7 +103,8 @@ namespace Persistence_Defender
             else
             {
                 EventLogger.WriteError($"Requested registry key '{key}' does not exist in '{RegistryPath}'.");
-                return null; // No exception thrown, just return null
+                Environment.Exit(1); // Force exit on registry access error
+                return 0;
             }
         }
     }

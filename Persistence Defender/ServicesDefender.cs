@@ -4,23 +4,28 @@ using System.ServiceProcess;
 
 namespace Persistence_Defender
 {
-    public class ServicesDefender : IPersistenceDefender
+    public class ServicesDefender : BasePersistenceDefender
     {
         private ManagementEventWatcher watcher;
 
-        public void StartDefender()
+        public ServicesDefender(int mode) : base(mode) { }
+
+        public override void StartDefender()
         {
-            try
+            if (Mode != 0)
             {
-                string query = "SELECT * FROM __InstanceCreationEvent WITHIN 10 WHERE TargetInstance ISA 'Win32_Service'";
-                watcher = new ManagementEventWatcher(new ManagementScope("\\\\.\\root\\cimv2"), new EventQuery(query));
-                watcher.EventArrived += OnServiceCreated;
-                watcher.Start();
-                EventLogger.WriteInfo("Started services defender.");
-            }
-            catch (Exception ex)
-            {
-                EventLogger.WriteError($"Error starting services defender: {ex.Message}");
+                try
+                {
+                    string query = "SELECT * FROM __InstanceCreationEvent WITHIN 10 WHERE TargetInstance ISA 'Win32_Service'";
+                    watcher = new ManagementEventWatcher(new ManagementScope("\\\\.\\root\\cimv2"), new EventQuery(query));
+                    watcher.EventArrived += OnServiceCreated;
+                    watcher.Start();
+                    EventLogger.WriteInfo("Started services defender.");
+                }
+                catch (Exception ex)
+                {
+                    EventLogger.WriteError($"Error starting services defender: {ex.Message}");
+                }
             }
         }
 
@@ -67,7 +72,7 @@ namespace Persistence_Defender
             }
         }
 
-        public void StopDefender()
+        public override void StopDefender()
         {
             try
             {

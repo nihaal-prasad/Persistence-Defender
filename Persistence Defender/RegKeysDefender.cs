@@ -9,7 +9,7 @@ using System.IO;
 
 namespace Persistence_Defender
 {
-    public class RegKeysDefender : IPersistenceDefender
+    public class RegKeysDefender : BasePersistenceDefender
     {
         private readonly RegistryKey rootKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
         private readonly Dictionary<string, Dictionary<string, object>> registrySnapshot = new Dictionary<string, Dictionary<string, object>>();
@@ -34,27 +34,32 @@ namespace Persistence_Defender
         private Thread monitorThread;
         private bool stopRequested = false;
 
+        public RegKeysDefender(int mode) : base(mode) { }
+
         public void DisplayRegistrySnapshot()
         {
             string snapshotInfo = string.Join(" | ", registrySnapshot.Select(kvp => $"{kvp.Key}: {string.Join(", ", kvp.Value.Select(v => $"{v.Key}={v.Value}"))}"));
             EventLogger.WriteInfo($"Registry Snapshot: {snapshotInfo}");
         }
 
-        public void StartDefender()
+        public override void StartDefender()
         {
-            try
+            if (Mode != 0)
             {
-                StopDefender();
-                TakeRegistrySnapshot();
+                try
+                {
+                    StopDefender();
+                    TakeRegistrySnapshot();
 
-                stopRequested = false;
-                monitorThread = new Thread(MonitorRegistryKeys) { IsBackground = true };
-                monitorThread.Start();
-                EventLogger.WriteInfo("Started registry keys defender.");
-            }
-            catch (Exception ex)
-            {
-                EventLogger.WriteError($"Error starting registry keys defender: {ex.Message}");
+                    stopRequested = false;
+                    monitorThread = new Thread(MonitorRegistryKeys) { IsBackground = true };
+                    monitorThread.Start();
+                    EventLogger.WriteInfo("Started registry keys defender.");
+                }
+                catch (Exception ex)
+                {
+                    EventLogger.WriteError($"Error starting registry keys defender: {ex.Message}");
+                }
             }
         }
 
@@ -181,7 +186,7 @@ namespace Persistence_Defender
             }
         }
 
-        public void StopDefender()
+        public override void StopDefender()
         {
             try
             {

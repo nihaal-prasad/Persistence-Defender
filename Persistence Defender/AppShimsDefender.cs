@@ -4,16 +4,20 @@ using System.Linq;
 
 namespace Persistence_Defender
 {
-    public class AppShimsDefender : IPersistenceDefender
+    public class AppShimsDefender : BasePersistenceDefender
     {
         private FileSystemWatcher[] watchers;
 
-        public void StartDefender()
+        public AppShimsDefender(int mode) : base(mode) { }
+
+        public override void StartDefender()
         {
-            try
+            if (Mode != 0)
             {
-                string[] systemShimPaths =
+                try
                 {
+                    string[] systemShimPaths =
+                    {
                     "C:\\Windows\\AppCompat\\Programs",
                     "C:\\Windows\\AppPatch\\Custom",
                     "C:\\Windows\\AppPatch\\Custom\\Custom64",
@@ -24,21 +28,22 @@ namespace Persistence_Defender
                     "C:\\Windows\\System32\\Tasks"
                 };
 
-                string usersDirectory = "C:\\Users";
-                string[] userShimPaths = Directory.GetDirectories(usersDirectory)
-                    .Select(userDir => Path.Combine(userDir, "AppData", "Local", "Microsoft", "Windows", "AppCompat", "Programs"))
-                    .Where(Directory.Exists)
-                    .ToArray();
+                    string usersDirectory = "C:\\Users";
+                    string[] userShimPaths = Directory.GetDirectories(usersDirectory)
+                        .Select(userDir => Path.Combine(userDir, "AppData", "Local", "Microsoft", "Windows", "AppCompat", "Programs"))
+                        .Where(Directory.Exists)
+                        .ToArray();
 
-                string[] allShimPaths = systemShimPaths.Concat(userShimPaths).ToArray();
+                    string[] allShimPaths = systemShimPaths.Concat(userShimPaths).ToArray();
 
-                watchers = allShimPaths.Select(CreateWatcher).Where(w => w != null).ToArray();
+                    watchers = allShimPaths.Select(CreateWatcher).Where(w => w != null).ToArray();
 
-                EventLogger.WriteInfo("Started application shims defender.");
-            }
-            catch (Exception ex)
-            {
-                EventLogger.WriteError($"Error starting application shims defender: {ex.Message}");
+                    EventLogger.WriteInfo("Started application shims defender.");
+                }
+                catch (Exception ex)
+                {
+                    EventLogger.WriteError($"Error starting application shims defender: {ex.Message}");
+                }
             }
         }
 
@@ -88,7 +93,7 @@ namespace Persistence_Defender
             }
         }
 
-        public void StopDefender()
+        public override void StopDefender()
         {
             try
             {

@@ -11,23 +11,28 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace Persistence_Defender
 {
-    internal class SchTasksDefender : IPersistenceDefender
+    internal class SchTasksDefender : BasePersistenceDefender
     {
         private static ManagementEventWatcher watcher;
 
-        public void StartDefender()
+        public SchTasksDefender(int mode) : base(mode) { }
+
+        public override void StartDefender()
         {
-            try
+            if (Mode != 0)
             {
-                string query = "SELECT * FROM __InstanceCreationEvent WITHIN 10 WHERE TargetInstance ISA 'MSFT_ScheduledTask'";
-                watcher = new ManagementEventWatcher(new ManagementScope(@"\\.\root\Microsoft\Windows\TaskScheduler"), new EventQuery(query));
-                watcher.EventArrived += OnScheduledTaskCreated;
-                watcher.Start();
-                EventLogger.WriteInfo("Started scheduled tasks defender.");
-            }
-            catch (Exception ex)
-            {
-                EventLogger.WriteError($"Error starting scheduled tasks defender: {ex.Message}");
+                try
+                {
+                    string query = "SELECT * FROM __InstanceCreationEvent WITHIN 10 WHERE TargetInstance ISA 'MSFT_ScheduledTask'";
+                    watcher = new ManagementEventWatcher(new ManagementScope(@"\\.\root\Microsoft\Windows\TaskScheduler"), new EventQuery(query));
+                    watcher.EventArrived += OnScheduledTaskCreated;
+                    watcher.Start();
+                    EventLogger.WriteInfo("Started scheduled tasks defender.");
+                }
+                catch (Exception ex)
+                {
+                    EventLogger.WriteError($"Error starting scheduled tasks defender: {ex.Message}");
+                }
             }
         }
 
@@ -72,7 +77,7 @@ namespace Persistence_Defender
             }
         }
 
-        public void StopDefender()
+        public override void StopDefender()
         {
             try
             {

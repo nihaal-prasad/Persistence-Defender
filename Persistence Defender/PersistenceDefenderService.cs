@@ -9,12 +9,13 @@ using System.Text;
 using System.Threading.Tasks;
 
 // Command for installing: sc create "Persistence Defender Service" binPath="C:\Users\Administrator\Desktop\Debug\Persistence Defender.exe" start= auto
+// Command for running: sc start "Persistence Defender Service"
 
 namespace Persistence_Defender
 {
     public partial class PersistenceDefenderService : ServiceBase
     {
-        private List<IPersistenceDefender> defenders;
+        private List<BasePersistenceDefender> defenders;
 
         public PersistenceDefenderService()
         {
@@ -27,21 +28,19 @@ namespace Persistence_Defender
             SettingsReader settingsReader = new SettingsReader();
             settingsReader.LoadRegistryValues();
 
-            // TODO: Enable/disable alerts/warnings/etc from certain locations
-
             // Define all persistence defenders that will be loaded
-            defenders = new List<IPersistenceDefender>
+            defenders = new List<BasePersistenceDefender>
             {
-                new SchTasksDefender(),
-                new StartupFoldersDefender(),
-                new AppShimsDefender(),
-                new ServicesDefender(),
-                new PSProfilesDefender(),
-                new BITSJobsDefender(),
-                new RegKeysDefender()
+                new SchTasksDefender(settingsReader.GetRegistryValue("SchTasksDefender")),
+                new StartupFoldersDefender(settingsReader.GetRegistryValue("StartupFoldersDefender")),
+                new AppShimsDefender(settingsReader.GetRegistryValue("AppShimsDefender")),
+                new ServicesDefender(settingsReader.GetRegistryValue("ServicesDefender")),
+                new PSProfilesDefender(settingsReader.GetRegistryValue("PSProfilesDefender")),
+                new BITSJobsDefender(settingsReader.GetRegistryValue("BITSJobsDefender")),
+                new RegKeysDefender(settingsReader.GetRegistryValue("RegKeysDefender"))
             };
 
-            // TODO: Check user configuration before simply loading everything
+            // TODO: Check for logging-only mode
 
             // Load all persistence defenders
             foreach (var defender in defenders)

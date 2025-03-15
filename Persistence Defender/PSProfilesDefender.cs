@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace Persistence_Defender
 {
-    public class PSProfilesDefender : IPersistenceDefender
+    public class PSProfilesDefender : BasePersistenceDefender
     {
         private FileSystemWatcher[] watchers;
 
@@ -14,46 +14,51 @@ namespace Persistence_Defender
 
         private const uint FILE_ATTRIBUTE_READONLY = 0x1;
 
-        public void StartDefender()
+        public PSProfilesDefender(int mode) : base(mode) { }
+
+        public override void StartDefender()
         {
-            try
+            if (Mode != 0)
             {
-                string usersDirectory = "C:\\Users";
-                string[] userProfiles = Directory.GetDirectories(usersDirectory);
-
-                string systemProfilePath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-
-                string[] psProfilePaths = userProfiles.SelectMany(userDir => new[]
+                try
                 {
+                    string usersDirectory = "C:\\Users";
+                    string[] userProfiles = Directory.GetDirectories(usersDirectory);
+
+                    string systemProfilePath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+
+                    string[] psProfilePaths = userProfiles.SelectMany(userDir => new[]
+                    {
                     Path.Combine(userDir, "Documents", "WindowsPowerShell", "Profile.ps1"),
                     Path.Combine(userDir, "Documents", "PowerShell", "Profile.ps1"),
                     Path.Combine(userDir, "Documents", "WindowsPowerShell", "Microsoft.PowerShell_profile.ps1"),
                     Path.Combine(userDir, "Documents", "PowerShell", "Microsoft.PowerShell_profile.ps1")
                 }).ToArray();
 
-                string[] allProfilePaths = psProfilePaths.Concat(new[]
-                {
+                    string[] allProfilePaths = psProfilePaths.Concat(new[]
+                    {
                     Path.Combine(systemProfilePath, "Microsoft", "WindowsPowerShell", "Profile.ps1"),
                     Path.Combine(systemProfilePath, "Microsoft", "PowerShell", "Profile.ps1"),
                     Path.Combine(systemProfilePath, "Microsoft", "WindowsPowerShell", "Microsoft.PowerShell_profile.ps1"),
                     Path.Combine(systemProfilePath, "Microsoft", "PowerShell", "Microsoft.PowerShell_profile.ps1")
                 }).ToArray();
 
-                foreach (string path in psProfilePaths)
-                {
-                    if (File.Exists(path))
+                    foreach (string path in psProfilePaths)
                     {
-                        SetFileAttributes(path, FILE_ATTRIBUTE_READONLY);
+                        if (File.Exists(path))
+                        {
+                            SetFileAttributes(path, FILE_ATTRIBUTE_READONLY);
+                        }
                     }
+
+                    watchers = allProfilePaths.Select(CreateWatcher).Where(w => w != null).ToArray();
+
+                    EventLogger.WriteInfo("Started PowerShell profiles defender.");
                 }
-
-                watchers = allProfilePaths.Select(CreateWatcher).Where(w => w != null).ToArray();
-
-                EventLogger.WriteInfo("Started PowerShell profiles defender.");
-            }
-            catch (Exception ex)
-            {
-                EventLogger.WriteError($"Error starting PowerShell profiles defender: {ex.Message}");
+                catch (Exception ex)
+                {
+                    EventLogger.WriteError($"Error starting PowerShell profiles defender: {ex.Message}");
+                }
             }
         }
 
@@ -101,7 +106,7 @@ namespace Persistence_Defender
             }
         }
 
-        public void StopDefender()
+        public override void StopDefender()
         {
             try
             {
