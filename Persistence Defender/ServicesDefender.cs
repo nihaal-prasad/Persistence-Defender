@@ -20,7 +20,10 @@ namespace Persistence_Defender
                     watcher = new ManagementEventWatcher(new ManagementScope("\\\\.\\root\\cimv2"), new EventQuery(query));
                     watcher.EventArrived += OnServiceCreated;
                     watcher.Start();
-                    EventLogger.WriteInfo("Started services defender.");
+                    if (Mode == 1)
+                        EventLogger.WriteInfo("Started services defender.");
+                    else if (Mode == 2)
+                        EventLogger.WriteInfo("Started services defender (logging-only mode).");
                 }
                 catch (Exception ex)
                 {
@@ -29,7 +32,7 @@ namespace Persistence_Defender
             }
         }
 
-        private static void OnServiceCreated(object sender, EventArrivedEventArgs e)
+        private void OnServiceCreated(object sender, EventArrivedEventArgs e)
         {
             try
             {
@@ -38,14 +41,15 @@ namespace Persistence_Defender
                 EventLogger.WriteWarning($"New service detected: {serviceName}");
 
                 // Attempt to remove the service
-                RemoveService(serviceName);
+                if(Mode == 1)
+                    RemoveService(serviceName);
             }
             catch (Exception ex)
             {
                 EventLogger.WriteError($"Error in services defender watcher: {ex.Message}");
             }
         }
-        private static void RemoveService(string serviceName)
+        private void RemoveService(string serviceName)
         {
             try
             {

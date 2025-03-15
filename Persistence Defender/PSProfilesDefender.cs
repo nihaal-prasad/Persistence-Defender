@@ -53,7 +53,10 @@ namespace Persistence_Defender
 
                     watchers = allProfilePaths.Select(CreateWatcher).Where(w => w != null).ToArray();
 
-                    EventLogger.WriteInfo("Started PowerShell profiles defender.");
+                    if (Mode == 1)
+                        EventLogger.WriteInfo("Started PowerShell profiles defender.");
+                    else if (Mode == 2)
+                        EventLogger.WriteInfo("Started PowerShell profiles defender (logging-only mode).");
                 }
                 catch (Exception ex)
                 {
@@ -62,7 +65,7 @@ namespace Persistence_Defender
             }
         }
 
-        private static FileSystemWatcher CreateWatcher(string path)
+        private FileSystemWatcher CreateWatcher(string path)
         {
             try
             {
@@ -92,13 +95,16 @@ namespace Persistence_Defender
             }
         }
 
-        private static void OnProfileAccessAttempt(object sender, FileSystemEventArgs e)
+        private void OnProfileAccessAttempt(object sender, FileSystemEventArgs e)
         {
             try
             {
-                EventLogger.WriteWarning($"Unauthorized modification attempt detected on PowerShell profile: {e.FullPath}");
-                SetFileAttributes(e.FullPath, FILE_ATTRIBUTE_READONLY);
-                EventLogger.WriteInfo($"Reapplied read-only protection to PowerShell profile: {e.FullPath}");
+                EventLogger.WriteWarning($"Modification attempt detected on PowerShell profile: {e.FullPath}");
+                if (Mode == 1)
+                {
+                    SetFileAttributes(e.FullPath, FILE_ATTRIBUTE_READONLY);
+                    EventLogger.WriteInfo($"Reapplied read-only protection to PowerShell profile: {e.FullPath}");
+                }
             }
             catch (Exception ex)
             {

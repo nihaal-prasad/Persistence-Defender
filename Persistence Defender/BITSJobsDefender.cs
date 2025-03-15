@@ -23,7 +23,10 @@ namespace Persistence_Defender
                     EventLogWatcher watcher = new EventLogWatcher(eventQuery);
                     watcher.EventRecordWritten += new EventHandler<EventRecordWrittenEventArgs>(OnEventRecordWritten);
                     watcher.Enabled = true;
-                    EventLogger.WriteInfo("Started BITS Jobs defender.");
+                    if (Mode == 1)
+                        EventLogger.WriteInfo("Started BITS Jobs defender.");
+                    else if (Mode == 2)
+                        EventLogger.WriteInfo("Started BITS Jobs defender (logging-only mode).");
                 }
                 catch (Exception ex)
                 {
@@ -32,7 +35,7 @@ namespace Persistence_Defender
             }
         }
 
-        static void OnEventRecordWritten(object sender, EventRecordWrittenEventArgs e)
+        void OnEventRecordWritten(object sender, EventRecordWrittenEventArgs e)
         {
             if (e.EventRecord != null)
             {
@@ -41,8 +44,9 @@ namespace Persistence_Defender
                     string jobIdString = e.EventRecord.Properties[1].Value.ToString();
                     if (Guid.TryParse(jobIdString, out Guid jobId))
                     {
-                        EventLogger.WriteWarning($"New BITS job detected: {jobId}. Attempting to cancel it...");
-                        CancelBITSJob(jobId);
+                        EventLogger.WriteWarning($"New BITS job detected: {jobId}.");
+                        if(Mode == 1)
+                            CancelBITSJob(jobId);
                     }
                     else
                     {

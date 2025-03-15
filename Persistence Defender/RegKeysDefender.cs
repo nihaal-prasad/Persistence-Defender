@@ -54,7 +54,10 @@ namespace Persistence_Defender
                     stopRequested = false;
                     monitorThread = new Thread(MonitorRegistryKeys) { IsBackground = true };
                     monitorThread.Start();
-                    EventLogger.WriteInfo("Started registry keys defender.");
+                    if (Mode == 1)
+                        EventLogger.WriteInfo("Started registry keys defender.");
+                    else if (Mode == 2)
+                        EventLogger.WriteInfo("Started registry keys defender (logging-only mode).");
                 }
                 catch (Exception ex)
                 {
@@ -155,9 +158,12 @@ namespace Persistence_Defender
                             {
                                 if (!registrySnapshot[path].ContainsKey(existingValue))
                                 {
-                                    EventLogger.WriteWarning($"Detected unauthorized registry key: {path}\\{existingValue}");
-                                    regKey.DeleteValue(existingValue, false);
-                                    EventLogger.WriteInfo($"Deleted unauthorized key: {path}\\{existingValue}");
+                                    EventLogger.WriteWarning($"Detected new registry key: {path}\\{existingValue}");
+                                    if (Mode == 1)
+                                    {
+                                        regKey.DeleteValue(existingValue, false);
+                                        EventLogger.WriteInfo($"Deleted new registry key: {path}\\{existingValue}");
+                                    }
                                 }
                             }
 
@@ -166,9 +172,12 @@ namespace Persistence_Defender
                                 object currentValue = regKey.GetValue(kvp.Key);
                                 if (currentValue == null || !currentValue.Equals(kvp.Value))
                                 {
-                                    EventLogger.WriteWarning($"Detected unauthorized registry modification in {path}\\{kvp.Key}");
-                                    regKey.SetValue(kvp.Key, kvp.Value);
-                                    EventLogger.WriteInfo($"Reverted unauthorized registry modification in {path}\\{kvp.Key}");
+                                    EventLogger.WriteWarning($"Detected registry modification in {path}\\{kvp.Key}");
+                                    if (Mode == 1)
+                                    {
+                                        regKey.SetValue(kvp.Key, kvp.Value);
+                                        EventLogger.WriteInfo($"Reverted unauthorized registry modification in {path}\\{kvp.Key}");
+                                    }
                                 }
                             }
 

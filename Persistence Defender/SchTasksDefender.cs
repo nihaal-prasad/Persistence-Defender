@@ -27,7 +27,10 @@ namespace Persistence_Defender
                     watcher = new ManagementEventWatcher(new ManagementScope(@"\\.\root\Microsoft\Windows\TaskScheduler"), new EventQuery(query));
                     watcher.EventArrived += OnScheduledTaskCreated;
                     watcher.Start();
-                    EventLogger.WriteInfo("Started scheduled tasks defender.");
+                    if (Mode == 1)
+                        EventLogger.WriteInfo("Started scheduled tasks defender.");
+                    else if (Mode == 2)
+                        EventLogger.WriteInfo("Started scheduled tasks defender (logging-only mode).");
                 }
                 catch (Exception ex)
                 {
@@ -36,7 +39,7 @@ namespace Persistence_Defender
             }
         }
 
-        private static void OnScheduledTaskCreated(object sender, EventArrivedEventArgs e)
+        private void OnScheduledTaskCreated(object sender, EventArrivedEventArgs e)
         {
             try
             {
@@ -46,14 +49,15 @@ namespace Persistence_Defender
                 EventLogger.WriteWarning($"New scheduled task created: {taskName}");
 
                 // Undo the change
-                RemoveScheduledTask(taskName);
+                if(Mode == 1)
+                    RemoveScheduledTask(taskName);
             }
             catch (Exception ex)
             {
                 EventLogger.WriteError($"Error in scheduled tasks defender watcher: {ex.Message}");
             }
         }
-        private static void RemoveScheduledTask(string taskName)
+        private void RemoveScheduledTask(string taskName)
         {
             try
             {

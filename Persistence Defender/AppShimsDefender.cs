@@ -38,7 +38,10 @@ namespace Persistence_Defender
 
                     watchers = allShimPaths.Select(CreateWatcher).Where(w => w != null).ToArray();
 
-                    EventLogger.WriteInfo("Started application shims defender.");
+                    if (Mode == 1)
+                        EventLogger.WriteInfo("Started application shims defender.");
+                    else if (Mode == 2)
+                        EventLogger.WriteInfo("Started application shims defender (logging-only mode).");
                 }
                 catch (Exception ex)
                 {
@@ -75,7 +78,7 @@ namespace Persistence_Defender
             }
         }
 
-        private static void OnAppShimCreated(object sender, FileSystemEventArgs e)
+        private void OnAppShimCreated(object sender, FileSystemEventArgs e)
         {
             try
             {
@@ -83,8 +86,11 @@ namespace Persistence_Defender
 
                 if (File.Exists(e.FullPath))
                 {
-                    File.Delete(e.FullPath);
-                    EventLogger.WriteInfo($"Application shim '{e.FullPath}' deleted successfully.");
+                    if (Mode == 1)
+                    {
+                        File.Delete(e.FullPath);
+                        EventLogger.WriteInfo($"Application shim '{e.FullPath}' deleted successfully.");
+                    }
                 }
             }
             catch (Exception ex)

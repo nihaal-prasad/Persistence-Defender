@@ -30,11 +30,14 @@ namespace Persistence_Defender
                 // Monitor all startup folders
                 startupWatchers = allStartupPaths.Select(CreateWatcher).Where(w => w != null).ToArray();
 
-                EventLogger.WriteInfo("Started startup folders defender.");
+                if (Mode == 1)
+                    EventLogger.WriteInfo("Started startup folders defender.");
+                else if (Mode == 2)
+                    EventLogger.WriteInfo("Started startup folders defender (logging-only mode).");
             }
         }
 
-        private static FileSystemWatcher CreateWatcher(string path)
+        private FileSystemWatcher CreateWatcher(string path)
         {
             try
             {
@@ -62,12 +65,12 @@ namespace Persistence_Defender
             }
         }
 
-        private static void OnFileCreated(object sender, FileSystemEventArgs e)
+        private void OnFileCreated(object sender, FileSystemEventArgs e)
         {
             try
             {
                 EventLogger.WriteWarning($"New startup file detected: {e.FullPath}");
-                if (File.Exists(e.FullPath))
+                if (Mode == 1 && File.Exists(e.FullPath))
                 {
                     File.Delete(e.FullPath);
                     EventLogger.WriteInfo($"Startup file '{e.FullPath}' deleted successfully.");
